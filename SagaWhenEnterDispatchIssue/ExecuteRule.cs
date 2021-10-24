@@ -1,7 +1,9 @@
-﻿namespace SagaWhenEnterDispatchIssue
+﻿using System;
+
+namespace SagaWhenEnterDispatchIssue
 {
     public interface ExecuteRule
     {
-        public int RuleId { get; set; }
+        public Guid RuleId { get; set; }
     }
 }

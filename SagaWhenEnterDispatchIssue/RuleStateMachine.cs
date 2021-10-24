@@ -36,7 +36,7 @@ namespace SagaWhenEnterDispatchIssue
                     context.Instance.ExecutionRequestedAt = DateTime.UtcNow;
                     await Task.Delay(new Random().Next(50, 1000));
                 })
-                .Request(Execute, context => context.Init<ExecuteRule>(new { RuleId = context.Instance.Id }))
+                .Request(Execute, context => context.Init<ExecuteRule>(new { RuleId = context.Instance.CorrelationId }))
                 .TransitionTo(Executing)
             );
 

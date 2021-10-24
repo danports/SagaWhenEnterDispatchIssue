@@ -18,14 +18,14 @@ namespace SagaWhenEnterDispatchIssue
 
         public async Task Consume(ConsumeContext<ExecuteRule> context)
         {
-            var rule = await _context.Rules.SingleOrDefaultAsync(x => x.Id == context.Message.RuleId);
+            var rule = await _context.Rules.SingleOrDefaultAsync(x => x.CorrelationId == context.Message.RuleId);
 
             _logger.LogInformation("Executing {Rule}: current state {CurrentState}, request ID {RequestId}",
                 rule.Format(), rule.CurrentState, rule.ExecutionRequestId);
 
             await Task.Delay(1000);
 
-            await context.RespondAsync<ExecuteRuleResponse>(new { RuleId = rule.Id });
+            await context.RespondAsync<ExecuteRuleResponse>(new { RuleId = rule.CorrelationId });
             _logger.LogInformation("Completed executing {Rule}", rule.Format());
         }
     }
