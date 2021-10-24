@@ -9,13 +9,13 @@ namespace SagaWhenEnterDispatchIssue
 {
     public class RuleStateMachine : MassTransitStateMachine<Rule>
     {
-        public RuleStateMachine(IHostEnvironment environment, ILogger<RuleStateMachine> logger)
+        public RuleStateMachine(ILogger<RuleStateMachine> logger)
         {
             InstanceState(x => x.CurrentState);
 
             Request(() => Execute, x => x.ExecutionRequestId, r =>
             {
-                r.ServiceAddress = new Uri($"amazonsqs://us-east-1/{environment.EnvironmentName}/{environment.EnvironmentName}_ExecuteRule");
+                r.ServiceAddress = new Uri($"loopback://localhost/ExecuteRule");
                 r.Timeout = TimeSpan.Zero;
             });
 
