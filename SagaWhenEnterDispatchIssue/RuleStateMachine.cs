@@ -1,6 +1,4 @@
-﻿using Automatonymous;
-using MassTransit;
-using Microsoft.Extensions.Hosting;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -23,20 +21,20 @@ namespace SagaWhenEnterDispatchIssue
                 .CorrelateBy((instance, context) => context.Message.CategoryId == instance.CategoryId)
                 .OnMissingInstance(x => x.Discard()));
 
-            During(new[] { Initial, Waiting },
+            During(new[] { Waiting },
                 When(CategoryUpdated)
-                    .Then(context => logger.LogInformation("Category updated for {Rule}; starting execution...", context.Instance.Format()))
+                    .Then(context => logger.LogInformation("Category updated for {Rule}; starting execution...", context.Saga.Format()))
                     .TransitionTo(StartingExecution)
             );
 
             WhenEnter(StartingExecution, x => x
                 .ThenAsync(async context =>
                 {
-                    logger.LogInformation("Starting execution for {Rule}...", context.Instance.Format());
-                    context.Instance.ExecutionRequestedAt = DateTime.UtcNow;
+                    logger.LogInformation("Starting execution for {Rule}...", context.Saga.Format());
+                    context.Saga.ExecutionRequestedAt = DateTime.UtcNow;
                     await Task.Delay(new Random().Next(50, 1000));
                 })
-                .Request(Execute, context => context.Init<ExecuteRule>(new { RuleId = context.Instance.CorrelationId }))
+                .Request(Execute, context => context.Init<ExecuteRule>(new { RuleId = context.Saga.CorrelationId }))
                 .TransitionTo(Executing)
             );
 
@@ -44,15 +42,15 @@ namespace SagaWhenEnterDispatchIssue
                 When(Execute.Completed)
                     .Then(context =>
                     {
-                        logger.LogInformation("Executed {Rule}.", context.Instance.Format());
-                        context.Instance.ExecutionRequestedAt = null;
+                        logger.LogInformation("Executed {Rule}.", context.Saga.Format());
+                        context.Saga.ExecutionRequestedAt = null;
                     })
                     .TransitionTo(Waiting),
                 When(Execute.Faulted)
                     .Then(context =>
                     {
-                        logger.LogError("Failed to execute {Rule}; retrying later.", context.Instance.Format());
-                        context.Instance.ExecutionRequestedAt = null;
+                        logger.LogError("Failed to execute {Rule}; retrying later.", context.Saga.Format());
+                        context.Saga.ExecutionRequestedAt = null;
                     })
                     .TransitionTo(Waiting)
             );

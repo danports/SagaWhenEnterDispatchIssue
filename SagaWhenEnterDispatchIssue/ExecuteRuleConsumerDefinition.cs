@@ -1,7 +1,4 @@
-﻿using GreenPipes;
-using MassTransit;
-using MassTransit.ConsumeConfigurators;
-using MassTransit.Definition;
+﻿using MassTransit;
 using System;
 
 namespace SagaWhenEnterDispatchIssue
