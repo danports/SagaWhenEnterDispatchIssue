@@ -28,7 +28,7 @@ namespace SagaWhenEnterDispatchIssue
                 {
                     services.AddDbContext<ApplicationDbContext>(options =>
                     {
-                        options.UseMySql("server=localhost;port=3307;userid=root;pwd=example;database=testing", new MySqlServerVersion("8.0.23")).EnableSensitiveDataLogging();
+                        options.UseMySql("server=localhost;userid=root;pwd=MYROOTPASSWORD;database=testing", new MySqlServerVersion("8.0.23")).EnableSensitiveDataLogging();
                     });
                     services.AddMassTransit(x =>
                     {
@@ -41,9 +41,20 @@ namespace SagaWhenEnterDispatchIssue
                                 r.ConcurrencyMode = ConcurrencyMode.Optimistic;
                             });
 
-                        x.UsingInMemory((registration, mem) => mem.ConfigureEndpoints(registration));
+                        x.SetEndpointNameFormatter(new DefaultEndpointNameFormatter("Development_", false));
+                        x.UsingAmazonSqs((registration, sqs) =>
+                        {
+                            sqs.Host("us-east-1", h =>
+                            {
+                                h.AccessKey("MYACCESSKEY");
+                                h.SecretKey("MYSECRETKEY");
+                                h.Scope("Development");
+                                h.EnableScopedTopics();
+                            });
+                            sqs.ConfigureEndpoints(registration);
+                            sqs.UseDelayedMessageScheduler();
+                        });
                     });
-                    services.AddSingleton<IHostedService, BusHostedService>();
                 })
                 .UseConsoleLifetime()
                 .Build();
@@ -58,12 +69,16 @@ namespace SagaWhenEnterDispatchIssue
             var context = host.Services.GetRequiredService<ApplicationDbContext>();
             await context.Database.EnsureCreatedAsync();
 
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 5; i++)
                 context.Rules.Add(new Rule { CorrelationId = NewId.NextGuid(), CategoryId = 5, CurrentState = "Waiting" });
             await context.SaveChangesAsync();
 
-            Console.WriteLine("Publishing event...");
-            await bus.Publish<CategoryUpdated>(new { CategoryId = 5 });
+            Console.WriteLine("Publishing events...");
+            for (int i = 0; i < 20; i++)
+            {
+                await bus.Publish<CategoryUpdated>(new { CategoryId = 5 });
+                await Task.Delay(2000);
+            }
 
             await run;
         }

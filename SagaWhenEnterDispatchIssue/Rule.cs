@@ -11,7 +11,8 @@ namespace SagaWhenEnterDispatchIssue
         [MaxLength(50)] public string CurrentState { get; set; } = "Initial";
         public Guid? ExecutionRequestId { get; set; }
         public DateTime? ExecutionRequestedAt { get; set; }
-        [Timestamp] public byte[] Version { get; set; }
+		public bool ImmediatelyReexecute { get; set; }
+		[Timestamp] public byte[] Version { get; set; }
 
         public string Format() => $"Rule ({CorrelationId})";
     }
