@@ -28,7 +28,7 @@ namespace SagaWhenEnterDispatchIssue
                 {
                     services.AddDbContext<ApplicationDbContext>(options =>
                     {
-                        options.UseMySql("server=localhost;userid=root;pwd=MYROOTPASSWORD;database=testing", new MySqlServerVersion("8.0.23")).EnableSensitiveDataLogging();
+                        options.UseMySql("server=localhost;port=3307;userid=root;pwd=example;database=testing", new MySqlServerVersion("8.0.23")).EnableSensitiveDataLogging();
                     });
                     services.AddMassTransit(x =>
                     {
